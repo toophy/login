@@ -1,0 +1,1 @@
+easybuff -s proto_desc/ -t proto/ -l go

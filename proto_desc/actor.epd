@@ -1,0 +1,26 @@
+message C2m_login {
+  Account string
+  Token   string
+  Time    string
+  Skey    string
+}
+
+message M2c_login_ret {
+  Ret     int8
+  Msg     string
+  Skey    string
+  Token   string
+}
+
+message C2m_create_role {
+  Account string
+  Name    string
+  Job     string
+}
+
+message M2c_create_role_ret {
+  Ret     int8
+  Msg     string
+  Name    string
+  Job     string
+}
