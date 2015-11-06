@@ -68,6 +68,6 @@ func TestByte(t *testing.T) {
 
 	var s Stream
 	println(unsafe.Pointer(&tb_1[0]))
-	s.Init(tb_1, 3)
+	s.Init(tb_1)
 
 }

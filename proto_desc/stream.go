@@ -1,8 +1,6 @@
 package proto_desc
 
-import (
-	"unsafe"
-)
+import ()
 
 type Stream struct {
 	Data   []byte
@@ -12,7 +10,7 @@ type Stream struct {
 
 func (t *Stream) Init(d []byte) {
 	t.Data = d
-	t.MaxLen = len(t.Data)
+	t.MaxLen = uint64(len(t.Data))
 	t.Pos = 0
 }
 
@@ -222,7 +220,7 @@ func (t *Stream) ReadUint64() uint64 {
 	return 0
 }
 
-func (t *Stream) ReadBytes(d int) []byte {
+func (t *Stream) ReadBytes() []byte {
 	data_len := t.ReadUint16()
 	if data_len > 0 && (t.Pos+data_len) < (t.MaxLen+1) {
 		o := t.Pos
@@ -453,6 +451,20 @@ func (t *Stream) WriteUint64(d uint64) bool {
 		t.Data[t.Pos+7] = byte(d)
 		t.Pos = t.Pos + 8
 		return true
+	}
+
+	return false
+}
+
+func (t *Stream) WriteBytes(d []byte) bool {
+	d_len := uint64(len(d))
+
+	if t.Pos+d_len+1 < t.MaxLen {
+		if t.WriteUint16(d_len) {
+			copy(t.Data[t.Pos:], d[:])
+			t.Pos = t.Pos + d_len
+			return true
+		}
 	}
 
 	return false
