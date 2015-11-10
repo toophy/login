@@ -1,6 +1,9 @@
 package proto_desc
 
 import (
+	"fmt"
+	"strconv"
+	"strings"
 	"testing"
 	"unsafe"
 )
@@ -54,20 +57,57 @@ func GetInt16(buf []byte) (n int16) {
 	return
 }
 
+func ParseToNewGolangRow(d string) {
+
+	// mesasge -- 规则解释, } 结束符
+	// enum    -- 规则解释, } 结束符
+
+	r1 := strings.Replace(d, "\t", " ", -1)
+	r2 := strings.Replace(r1, "\r\n", " ", -1)
+	r3 := strings.Replace(r2, "\n", " ", -1)
+
+	m := strings.Fields(r3)
+	lens := len(m)
+
+	fmt.Println(lens)
+	fmt.Println(m)
+
+}
+
 func TestByte(t *testing.T) {
 	// 捕捉异常
 	defer func() {
 		if r := recover(); r != nil {
-			println("\nhere:\n" + r.(error).Error())
+			switch r.(type) {
+			case error:
+				println("TestByte:" + r.(error).Error())
+			case string:
+				println("TestByte:" + r.(string))
+			}
 		}
 	}()
 
-	tb_1 := []byte{0, 0, 0}
-	WriteInt64(0x0102, tb_1)
-	println(GetInt16(tb_1))
+	rg, err := strconv.ParseInt("3", 10, 32)
+	if err != nil {
+		println(rg, err.Error())
+	} else {
+		println(rg)
+	}
+
+	tb_1 := make([]byte, 1024)
 
 	var s Stream
-	println(unsafe.Pointer(&tb_1[0]))
 	s.Init(tb_1)
+
+	s.WriteInt24(-16)
+	s.WriteUint24(16)
+	s.WriteInt24(-8388607)
+
+	s.Seek(0)
+	println(s.ReadInt24())
+	println(s.ReadInt24())
+	println(s.ReadInt24())
+
+	ParseToNewGolangRow("       message              Acter        1      呵呵   {")
 
 }

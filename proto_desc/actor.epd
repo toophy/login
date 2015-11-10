@@ -1,26 +1,40 @@
+
+-- 帐号登录
+id 100
 message C2m_login {
-  Account string
-  Token   string
-  Time    string
-  Skey    string
+  Account string  帐号
+  Token   string  令牌
+  Time    string  时间戳
+  Skey    string  小区ID
 }
 
+-- 返回登录结果
+id 101
 message M2c_login_ret {
-  Ret     int8
-  Msg     string
-  Skey    string
-  Token   string
+  Ret     int8    返回结果
+  Msg     string  返回消息
+  Skey    string  小区ID
+  Token   string  令牌
 }
 
+-- 创建角色
+id 102
 message C2m_create_role {
-  Account string
-  Name    string
-  Job     string
+  Account string  帐号
+  Name    string  角色名
+  Job     string  职业
+  Age     int40   年龄
 }
 
+-- 返回创建角色
+id 103
 message M2c_create_role_ret {
-  Ret     int8
-  Msg     string
-  Name    string
-  Job     string
+  Ret     int8    返回值
+  Msg     string  返回消息
+  Name    string  角色名
+  Job     string  职业
+  Age     int40   年龄
 }
+
+-- 背包格上限
+enum BagGridMax 128
