@@ -1,60 +1,51 @@
 package app
 
 import (
-	"errors"
-	"fmt"
 	"io"
 	"net"
 )
 
-const (
-	MaxDataLen     = 5080
-	MaxSendDataLen = 4000
-	MaxHeader      = 4
-)
-
 // 消息节点(list节点)
 type Msg_node struct {
-	Len   int32 // 包长度
-	Token int32 // 包令牌
-	Count int32 // 包内消息数
-	Data  *byte // 数据
-}
-
-// 网络包
-type Net_packet struct {
-	Header [MaxHeader]byte // 包头
-	Len    uint32          // 包长度
-	Token  uint32          // 包令牌
-	Count  uint32          // 包内消息数
-	Data   *byte           // 数据
-}
-
-func (t *Net_packet) Clear() {
-	t.Len = 0
-	t.Token = 0
-	t.Count = 0
+	Len   uint32 // 包长度
+	Token uint32 // 包令牌
+	Count uint32 // 包内消息数
+	Data  []byte // 数据
 }
 
 // 读取网络消息
-func (t *Net_packet) ReadHeader(conn *net.TCPConn) error {
-	t.Clear()
-	length, err := io.ReadFull(conn, t.Header[:])
-	if length != MaxHeader {
-		GetApp().LogWarn("Net packet header : %d != %d", length, MaxHeader)
-		return err
+func ReadConnData(conn *net.TCPConn) (msg Msg_node, ret error) {
+	const ConnHeaderSize = 4
+	var header [ConnHeaderSize]byte
+	var length int
+	length, ret = io.ReadFull(conn, header[:])
+
+	if length != ConnHeaderSize {
+		GetApp().LogWarn("Net packet header : %d != %d", length, ConnHeaderSize)
+		return
 	}
-	if err != nil {
-		return err
+	if ret != nil {
+		return
 	}
 
-	t.Len = (uint32(t.Header[0])) | (uint32(t.Header[1]) << 8)
-	t.Token = uint32(t.Header[2])
-	t.Count = uint32(t.Header[3])
+	msg.Len = (uint32(header[0])) | (uint32(header[1]) << 8)
+	msg.Token = uint32(header[2])
+	msg.Count = uint32(header[3])
 
-	// 根据 t.Len 分配一个 缓冲, 并读取 body
-}
+	GetApp().LogInfo("ReadConnData : len =%d, token=%d, count=%d", msg.Len, msg.Token, msg.Count)
 
-func (this *Net_packet) ReadBody(conn *net.TCPConn) error {
+	// 根据 msg.Len 分配一个 缓冲, 并读取 body
+	buf := make([]byte, msg.Len)
+	length, ret = io.ReadFull(conn, buf[:])
+	if length != ConnHeaderSize {
+		GetApp().LogWarn("Net packet body : %d != %d", length, msg.Len)
+		return
+	}
+	if ret != nil {
+		return
+	}
 
+	msg.Data = buf
+
+	return
 }

@@ -13,6 +13,7 @@ const (
 )
 
 func main() {
+
 	if app.GetApp().Start(100) {
 		//
 		go beego.Run(beego.AppConfig.String("Listen"))

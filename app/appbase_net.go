@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/toophy/login/help"
 	"net"
 )
 
@@ -79,7 +80,7 @@ func (this *AppBase) Listen(name, net_type, address string, onRet ConnRetFunc) {
 		this.AddConn(c)
 		onRet("accept ok", "", c.Id, "")
 
-		go this.ConnProc(c, onRet)
+		go this.ConnProcEx(c, onRet)
 	}
 }
 
@@ -108,7 +109,7 @@ func (this *AppBase) Connect(name, net_type, address string, onRet ConnRetFunc) 
 		this.AddConn(c)
 
 		onRet("connect ok", name, c.Id, "")
-		go this.ConnProc(c, onRet)
+		go this.ConnProcEx(c, onRet)
 	}
 }
 
@@ -132,6 +133,54 @@ func (this *AppBase) ConnProc(c *ClientConn, onRet ConnRetFunc) {
 			break
 		}
 	}
+
+	this._closeConn(c, onRet)
+}
+
+func (this *AppBase) ConnProcEx(c *ClientConn, onRet ConnRetFunc) {
+
+	// 捕捉异常
+	defer func() {
+		if r := recover(); r != nil {
+			switch r.(type) {
+			case error:
+				GetApp().LogWarn("ConnProcEx:" + r.(error).Error())
+			case string:
+				GetApp().LogWarn("ConnProcEx:" + r.(string))
+			}
+		}
+
+		this._closeConn(c, onRet)
+	}()
+
+	for {
+		data, ret := ReadConnData(c.Conn)
+
+		if ret == nil {
+			// 校验 data.Token, 拆包, 解密, 分别处理消息
+			var stream help.Stream
+			stream.Init(data.Data)
+
+			for i := uint32(0); i < data.Count; i++ {
+				msg_len_id := stream.ReadUint32()
+				// msg_len := int(msg_len_id >>16)
+				msg_id := int(msg_len_id & 0xFFFF)
+
+				if msg_id >= 0 && msg_id <= this.MsgProcCount && this.MsgProc[msg_id] != nil {
+					this.MsgProc[msg_id](c)
+				}
+			}
+
+		} else {
+			onRet("read failed", c.Name, c.Id, ret.Error())
+			break
+		}
+	}
+
+	this._closeConn(c, onRet)
+}
+
+func (this *AppBase) _closeConn(c *ClientConn, onRet ConnRetFunc) {
 
 	onRet("pre close", c.Name, c.Id, "")
 

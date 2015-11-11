@@ -2,11 +2,71 @@ package proto_desc
 
 import (
 	"fmt"
+	. "github.com/toophy/login/help"
 	"strconv"
 	"strings"
 	"testing"
 	"unsafe"
 )
+
+type Mallocer struct {
+}
+
+func (this *Mallocer) Alloc(s int) {
+}
+
+func (this *Mallocer) Free(s interface{}) {
+
+}
+
+func (this *Mallocer) relloc(s int, a int) {
+	if a < s {
+		return
+	}
+
+	block := make([]byte, a)
+
+	first := uintptr(unsafe.Pointer(&block[0]))
+
+	count := a/s - 1
+
+	for i := 0; i < count; i++ {
+		x := first + uintptr(i*s)
+		*(*uintptr)(unsafe.Pointer(x)) = x
+	}
+
+	fmt.Print(block)
+}
+
+func Tcmalloc(t *testing.T) {
+
+	var mc Mallocer
+	mc.relloc(10, 100)
+
+	// block_1 := make([]byte, 4096)
+	// block_2 := make([]byte, 4096)
+	// block_3 := make([]byte, 4096)
+
+	// *(*uintptr)(unsafe.Pointer(&block_1[0])) = uintptr(unsafe.Pointer(&block_2[0]))
+	// *(*uintptr)(unsafe.Pointer(&block_2[0])) = uintptr(unsafe.Pointer(&block_3[0]))
+	// *(*uintptr)(unsafe.Pointer(&block_3[0])) = uintptr(0)
+
+	// fmt.Print(block_1[:8])
+	// fmt.Print("\n")
+	// fmt.Print(block_2[:8])
+	// fmt.Print("\n")
+	// fmt.Print(block_3[:8])
+	// fmt.Print("\n")
+
+	// fmt.Println(&block_1[0])
+	// fmt.Println(&block_2[0])
+	// fmt.Println(&block_3[0])
+}
+
+func TestMain(t *testing.T) {
+	Tcmalloc(t)
+	//MyByte(t)
+}
 
 // func GetInt32(buf []byte) (n int32) {
 // 	n = int32(buf[0]) | (int32(buf[1]) << 8) | (int32(buf[2]) << 16) | (int32(buf[3]) << 24)
@@ -74,7 +134,7 @@ func ParseToNewGolangRow(d string) {
 
 }
 
-func TestByte(t *testing.T) {
+func MyByte(t *testing.T) {
 	// 捕捉异常
 	defer func() {
 		if r := recover(); r != nil {

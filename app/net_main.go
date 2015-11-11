@@ -7,7 +7,7 @@ import (
 func Main_go() {
 	RegMsgProc()
 
-	//go GetApp().Listen("main_listen", "tcp", ":8001", OnListenRet)
+	go GetApp().Listen("main_listen", "tcp", ":8001", OnListenRet)
 }
 
 func OnListenRet(typ string, name string, id int, info string) bool {
